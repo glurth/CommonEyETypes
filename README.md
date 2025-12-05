@@ -1,24 +1,27 @@
-# Common Asset Types
+# Common EyE Types
 
 This repository is used as a dependancy for all other repos that use these types.
 
 ## Installation
 
-In the unity editor, package manager, click to add a package from a git url:  https://github.com/glurth/UIPrefabGenerator.git
+In the unity editor, package manager, click to add a package from a git url:  https://github.com/glurth/CommonEyETypes.git
 
 
 ## Dependencies
 
   Requires Unity (using UnityEngine types such as ScriptableObject).
-    
-## License
-
-All rights reserved.
-
-No license is granted for use, modification, distribution, or any other purpose without prior written permission.
-
-If you're an independent developer and would like to use this software, email glurth at gmail.com to request a license. I usually approve such requests for free.  Businesses may contact me for pricing.
 
 ## Contributions
 
-While contributions are welcome, they cannot be used without your explicit written permission, as this project will remain proprietary software.
+Contributions, issues, and feature requests are welcome! Please submit them via the GitHub repository. Note: Due to licensing, contributions can only be included with explicit written permission from the copyright holder.
+    
+## License
+
+This package is licensed under the EyE Dual-Licensing Agreement.
+
+It provides free, perpetual use for indie developers and non-commercial projects whose teams had Total Gross Receipts under $100,000 USD in the previous fiscal year.
+
+Organizations exceeding this threshold must obtain a Perpetual Commercial License (PCL) for each named commercial project.
+
+Please review the full terms in [LICENSE.md] before commercial use.
+
