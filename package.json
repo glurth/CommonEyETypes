@@ -1,7 +1,7 @@
 {
-  "name": "com.glurth.commonassettypes",
+  "name": "com.glurth.commoneyetypes",
   "version": "1.0.0",
-  "displayName": "Common Asset Types",
+  "displayName": "Common EyE Types",
   "description": "Defines common asset types that are used in multiple repos",
   "unity": "2019.1",
   "dependencies": {},
