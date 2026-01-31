@@ -25,7 +25,26 @@ public static class StringUtil
     }
 
     /// <summary>
-    ?/// Performs a natural-string comparison:
+    /// Converts a CamelCase, PascalCase, or snake_case string into a spaced, capitalized format.
+    /// </summary>
+    /// <param name="text">The string to format.</param>
+    /// <returns>A "nicified" version of the string.</returns>
+    public static string NicifyString(this string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return text;
+
+        // Replace underscores with spaces
+        string result = text.Replace("_", " ");
+        
+        // Insert spaces before capital letters (e.g., CamelCase to Camel Case)
+        result = System.Text.RegularExpressions.Regex.Replace(result, "([a-z])([A-Z])", "$1 $2");
+
+        // Ensure first letter is capitalized
+        return char.ToUpper(result[0]) + result.Substring(1);
+    }
+
+    /// <summary>
+    /// Performs a natural-string comparison:
     /// - Alphabetical comparison for non-numeric characters.
     /// - Any contiguous digit/decimal run is parsed as a number and compared numerically.
     /// - Numbers with equal numeric value are ordered by literal length (more leading zeros come after).
