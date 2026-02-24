@@ -50,7 +50,7 @@ public static class StringUtil
     /// - Numbers with equal numeric value are ordered by literal length (more leading zeros come after).
     /// - After a numeric block, comparison resumes lexically.
     /// </summary>
-    public static int NaturalCompare(string left, string right)
+    public static int NaturalCompare(this string left, string right)
     {
         if (left == null) return right == null ? 0 : -1;
         if (right == null) return 1;
@@ -150,7 +150,7 @@ public static class StringUtil
     /// <exception cref="Exception">
     /// Any exception thrown by <paramref name="customToString"/> for an element will propagate.
     /// </exception>
-    public static string Join<T>(IEnumerable<T> items, System.Func<T, string> customToString, string separator = ", ")
+    public static string Join<T>(this IEnumerable<T> items, System.Func<T, string> customToString, string separator = ", ")
     {
         System.Text.StringBuilder sb = new();
         bool first = true;
@@ -239,6 +239,62 @@ public static class StringUtil
         return false;
     }
 
+
+    /// <summary>
+    /// Increments a trailing integer at the end of the specified string.
+    /// Supports trailing integers up to the maximum value of a 64-bit signed long (9,223,372,036,854,775,807).
+    /// </summary>
+    /// <param name="input">
+    /// The input string to evaluate. If the string ends with one or more numeric
+    /// characters, that numeric portion is parsed, incremented by one, and replaced
+    /// in the returned string. If the string does not end with a numeric sequence,
+    /// the value "1" is appended.
+    /// </param>
+    /// <returns>
+    /// A new string in which the trailing integer (if present) has been incremented,
+    /// or "1" appended if no trailing integer exists.  
+    /// If <paramref name="input"/> is null or empty, "1" is returned.
+    /// </returns>
+    /// <exception cref="OverflowException">
+    /// Thrown if the trailing numeric portion exceeds the range of <see cref="long"/>
+    /// during parsing or incrementation (only possible if the implementation uses
+    /// parsing methods that throw on overflow).
+    /// </exception>
+    public static string IncrementTrailingInteger(this string input)
+    {
+        if (string.IsNullOrEmpty(input))
+        {
+            return "1";
+        }
+
+        int index = input.Length - 1;
+
+        // Move backward while digits
+        while (index >= 0 && char.IsDigit(input[index]))
+        {
+            index--;
+        }
+
+        // No trailing number
+        if (index == input.Length - 1)
+        {
+            return input + "1";
+        }
+
+        string prefix = input.Substring(0, index + 1);
+        string numberPart = input.Substring(index + 1);
+
+        long number;
+        if (!long.TryParse(numberPart, out number))
+        {
+            // Should not happen unless overflow
+            return input;
+        }
+
+        number++;
+
+        return prefix + number.ToString();
+    }
     private const string singleQuote = "\"";
     private const string escapedQuote = "\\\"";
 
@@ -247,7 +303,7 @@ public static class StringUtil
     /// </summary>
     /// <param name="rawString"></param>
     /// <returns></returns>
-    public static string Quote(string rawString)
+    public static string Quote(this string rawString)
     {
         return singleQuote + rawString.Replace(singleQuote, escapedQuote) + singleQuote;
     }
@@ -260,7 +316,7 @@ public static class StringUtil
     /// </summary>
     /// <param name="quotedString">The string that may be surrounded by quotes.</param>
     /// <returns>The unquoted string with escaped quotes restored.</returns>
-    public static string UnQuote(string quotedString)
+    public static string UnQuote(this string quotedString)
     {
         string trimmed = quotedString.Trim();
         if (trimmed.Length >= 2 &&
@@ -274,7 +330,7 @@ public static class StringUtil
     }
 
 
-    public static string UnBracket(string bracketedString)
+    public static string UnBracket(this string bracketedString)
     {
         string trimmed = bracketedString.Trim();
         if (trimmed.Length >= 2 &&
