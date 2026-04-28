@@ -432,7 +432,32 @@ namespace EyE.Geometry
             name = mesh.name;
             RecalculateBounds();
         }
+        public MeshData(MeshData mesh)
+        {
+            if (mesh == null)
+                throw new System.ArgumentNullException("mesh");
 
+            indexFormat = mesh.indexFormat;
+            System.Array.Copy(mesh.vertices, vertices, mesh.vertices.Length);
+            triangles = new int[mesh.triangles.Length][];
+
+            for (int i = 0; i < mesh.triangles.Length; i++)
+            {
+                triangles[i] = new int[mesh.triangles[i].Length];
+                System.Array.Copy(mesh.triangles[i], triangles[i], mesh.triangles[i].Length);
+            }
+
+            System.Array.Copy(mesh.meshNormals, meshNormals, mesh.meshNormals.Length);
+            System.Array.Copy(mesh.meshUV0s, meshUV0s, mesh.meshUV0s.Length);
+            System.Array.Copy(mesh.meshUV1s, meshUV1s, mesh.meshUV1s.Length);
+            System.Array.Copy(mesh.meshUV2s, meshUV2s, mesh.meshUV2s.Length);
+            System.Array.Copy(mesh.meshColors, meshColors, mesh.meshColors.Length);
+            System.Array.Copy(mesh.meshTangents, meshTangents, mesh.meshTangents.Length);
+
+            bounds = mesh.bounds;
+            name = mesh.name;
+            
+        }
         /// <summary>Constructs an empty instance.</summary>
         public MeshData()
         {
