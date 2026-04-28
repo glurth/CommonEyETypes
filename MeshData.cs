@@ -17,7 +17,7 @@ namespace EyE.Geometry
         public Vector3[] vertices;
 
         /// <summary>Triangle indices.</summary>
-        public int[] triangles;
+        public int[][] triangles;
 
         /// <summary>Vertex normals. Optional.</summary>
         public Vector3[] meshNormals;
@@ -64,9 +64,25 @@ namespace EyE.Geometry
         }
 
         /// <summary>Sets triangle indices.</summary>
-        public void SetTriangles(int[] tris)
+        public void SetTriangles(int[] tris,int submeshIndex=0)
         {
-            triangles = tris;
+           // triangles = tris;
+
+            if (triangles == null || submeshIndex >= triangles.Length)
+            {
+                int newSize = submeshIndex + 1;
+                int[][] newArray = new int[newSize][];
+
+                if (triangles != null)
+                {
+                    for (int i = 0; i < triangles.Length; i++)
+                        newArray[i] = triangles[i];
+                }
+
+                triangles = newArray;
+            }
+
+            triangles[submeshIndex] = tris;
         }
 
         /// <summary>Sets normals. Length must match vertices.</summary>
@@ -110,14 +126,17 @@ namespace EyE.Geometry
         }
 
         /// <summary>Sets triangle indices from a list.</summary>
-        public void SetTriangles(System.Collections.Generic.List<int> tris)
+        public void SetTriangles(System.Collections.Generic.List<int> tris, int submeshIndex = 0)
         {
             if (tris == null)
             {
-                triangles = null;
+                SetTriangles((int[])null, submeshIndex);
+                //triangles = null;
                 return;
             }
-            triangles = tris.ToArray();
+
+            SetTriangles(tris.ToArray(),submeshIndex);
+            //triangles = tris;
         }
 
         /// <summary>Sets normals from a list.</summary>
@@ -189,8 +208,32 @@ namespace EyE.Geometry
             if (vertices != null)
                 newMesh.SetVertices(vertices);
 
+            //if (triangles != null)
+            //    newMesh.SetTriangles(triangles, 0);
             if (triangles != null)
-                newMesh.SetTriangles(triangles, 0);
+            {
+                int validCount = 0;
+                for (int i = 0; i < triangles.Length; i++)
+                {
+                    if (triangles[i] != null && triangles[i].Length > 0)
+                        validCount++;
+                }
+
+                newMesh.subMeshCount = validCount;
+
+                int dst = 0;
+                for (int i = 0; i < triangles.Length; i++)
+                {
+                    int[] tris = triangles[i];
+                    if (tris == null || tris.Length == 0)
+                        continue;
+
+                    newMesh.SetTriangles(tris, dst);
+                    dst++;
+                }
+
+            }
+
 
             if (meshNormals != null && meshNormals.Length == (vertices != null ? vertices.Length : 0))
                 newMesh.SetNormals(meshNormals);
@@ -263,7 +306,29 @@ namespace EyE.Geometry
             }
 
             // Accumulate face normals
-            for (int i = 0; i < triangles.Length; i += 3)
+            for (int s = 0; s < triangles.Length; s++)
+            {
+                int[] tris = triangles[s];
+                if (tris == null) continue;
+
+                for (int i = 0; i < tris.Length; i += 3)
+                {
+                    int i0 = tris[i];
+                    int i1 = tris[i + 1];
+                    int i2 = tris[i + 2];
+
+                    Vector3 v0 = vertices[i0];
+                    Vector3 v1 = vertices[i1];
+                    Vector3 v2 = vertices[i2];
+
+                    Vector3 normal = Vector3.Cross(v1 - v0, v2 - v0);
+
+                    meshNormals[i0] += normal;
+                    meshNormals[i1] += normal;
+                    meshNormals[i2] += normal;
+                }
+            }
+            /*for (int i = 0; i < triangles.Length; i += 3)
             {
                 int i0 = triangles[i];
                 int i1 = triangles[i + 1];
@@ -278,7 +343,7 @@ namespace EyE.Geometry
                 meshNormals[i0] += normal;
                 meshNormals[i1] += normal;
                 meshNormals[i2] += normal;
-            }
+            }*/
 
             // Normalize accumulated normals
             for (int i = 0; i < meshNormals.Length; i++)
@@ -300,7 +365,14 @@ namespace EyE.Geometry
 
             indexFormat = mesh.indexFormat;
             vertices = mesh.vertices;
-            triangles = mesh.triangles;
+            int subMeshCount = mesh.subMeshCount;
+            triangles = new int[subMeshCount][];
+
+            for (int i = 0; i < subMeshCount; i++)
+            {
+                triangles[i] = mesh.GetTriangles(i);
+            }
+            //triangles = mesh.triangles;
             meshNormals = mesh.normals;
             meshUV0s = mesh.uv;
             meshUV1s = mesh.uv2;
@@ -318,61 +390,4 @@ namespace EyE.Geometry
     }
 
 
-    /*
-    /// <summary>
-    /// Stores mesh information in a class that can be instantiated and used outside of the main unity thread.
-    /// </summary>
-    public class MeshData
-    {
-        public UnityEngine.Rendering.IndexFormat indexFormat = UnityEngine.Rendering.IndexFormat.UInt16;
-        public Vector3[] vertices;
-        public int[] triangles;
-        public Vector3[] meshNormals;
-
-        public Vector2[] meshUV0s;
-        public Vector2[] meshUV1s;
-        public Vector2[] meshUV2s;
-        public FacesAndNeighbors facesAndNeighborsRef;
-        public string name;
-        public Mesh ToMesh()
-        {
-            Mesh newMesh = new Mesh();
-            if(vertices.Length>=0xFFFF)
-                newMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-            else
-                newMesh.indexFormat = indexFormat;
-            newMesh.SetVertices(vertices);
-            newMesh.SetTriangles(triangles, 0);
-            newMesh.SetNormals(meshNormals);
-            newMesh.SetUVs(0, meshUV0s);
-            newMesh.SetUVs(1, meshUV1s);
-            newMesh.SetUVs(2, meshUV2s);
-
-            newMesh.name = name;
-            if (facesAndNeighborsRef != null)
-                facesAndNeighborsRef.meshRef = newMesh;
-
-            return newMesh;
-        }
-
-        public int vertexCount => vertices.Length;
-
-        public MeshData(Mesh mesh)
-        {
-            if (mesh == null) throw new System.ArgumentNullException(nameof(mesh));
-
-            indexFormat = mesh.indexFormat;
-            vertices = mesh.vertices;
-            triangles = mesh.triangles;
-            meshNormals = mesh.normals;
-
-            meshUV0s = mesh.uv;
-            meshUV1s = mesh.uv2;
-            meshUV2s = mesh.uv3;
-
-            name = mesh.name;
-        }
-        public MeshData()
-        { }
-    }*/
 }
