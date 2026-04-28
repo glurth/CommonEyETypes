@@ -192,6 +192,55 @@ namespace EyE.Geometry
         }
 
         /// <summary>
+        /// Normalizes all vertex positions so the mesh fits within a unit cube [0,1] in each axis,
+        /// based on the current <see cref="Bounds"/>.
+        /// </summary>
+        /// <remarks>
+        /// Each vertex is remapped from its original position into normalized space using:
+        /// (value - bounds.min) / bounds.size.
+        /// <para>
+        /// After execution:
+        /// - All vertex positions lie within the range [0,1] on each axis (unless the original bounds had zero size on that axis).
+        /// - <see cref="Bounds"/> is updated to a unit cube centered at (0.5, 0.5, 0.5) with size (1,1,1).
+        /// </para>
+        /// <para>
+        /// If any axis of the original bounds has zero size, that axis is collapsed to 0 for all vertices
+        /// to avoid division by zero.
+        /// </para>
+        /// <para>
+        /// This operation is affine (scale + translation) and does not modify topology, indices,
+        /// normals, or other vertex attributes.
+        /// </para>
+        /// </remarks>
+        public void Normalize()
+        {
+            Vector3 min = bounds.min;
+            Vector3 max = bounds.max;
+            Vector3 size = max - min;
+
+            float invX = 0f;
+            float invY = 0f;
+            float invZ = 0f;
+
+            if (size.x != 0f) { invX = 1f / size.x; }
+            if (size.y != 0f) { invY = 1f / size.y; }
+            if (size.z != 0f) { invZ = 1f / size.z; }
+
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                Vector3 v = vertices[i];
+
+                float x = (v.x - min.x) * invX;
+                float y = (v.y - min.y) * invY;
+                float z = (v.z - min.z) * invZ;
+
+                vertices[i] = new Vector3(x, y, z);
+            }
+
+            bounds = new Bounds(new Vector3(0.5f, 0.5f, 0.5f), Vector3.one);
+        }
+
+        /// <summary>
         /// Builds a Unity Mesh using the currently stored data.
         /// Must be called on the main Unity thread.
         /// </summary>
@@ -381,6 +430,7 @@ namespace EyE.Geometry
             meshTangents = mesh.tangents;
             bounds = mesh.bounds;
             name = mesh.name;
+            RecalculateBounds();
         }
 
         /// <summary>Constructs an empty instance.</summary>
