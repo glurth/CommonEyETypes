@@ -462,6 +462,309 @@ namespace EyE.Geometry
         public MeshData()
         {
         }
+
+        public void AppendMesh(MeshData other)
+        {
+            if (other == null || other.vertices == null || other.vertices.Length == 0)
+            {
+                return;
+            }
+
+            int vertexOffset = this.vertexCount;
+
+            // --- Vertices ---
+            if (this.vertices == null)
+            {
+                this.vertices = (Vector3[])other.vertices.Clone();
+            }
+            else
+            {
+                Vector3[] newVerts = new Vector3[this.vertices.Length + other.vertices.Length];
+                System.Array.Copy(this.vertices, 0, newVerts, 0, this.vertices.Length);
+                System.Array.Copy(other.vertices, 0, newVerts, this.vertices.Length, other.vertices.Length);
+                this.vertices = newVerts;
+            }
+
+            // --- Normals ---
+            if (other.meshNormals != null)
+            {
+                if (this.meshNormals == null)
+                {
+                    this.meshNormals = (Vector3[])other.meshNormals.Clone();
+                }
+                else
+                {
+                    Vector3[] arr = new Vector3[this.meshNormals.Length + other.meshNormals.Length];
+                    System.Array.Copy(this.meshNormals, 0, arr, 0, this.meshNormals.Length);
+                    System.Array.Copy(other.meshNormals, 0, arr, this.meshNormals.Length, other.meshNormals.Length);
+                    this.meshNormals = arr;
+                }
+            }
+
+            // --- UV0 ---
+            if (other.meshUV0s != null)
+            {
+                if (this.meshUV0s == null)
+                {
+                    this.meshUV0s = (Vector2[])other.meshUV0s.Clone();
+                }
+                else
+                {
+                    Vector2[] arr = new Vector2[this.meshUV0s.Length + other.meshUV0s.Length];
+                    System.Array.Copy(this.meshUV0s, 0, arr, 0, this.meshUV0s.Length);
+                    System.Array.Copy(other.meshUV0s, 0, arr, this.meshUV0s.Length, other.meshUV0s.Length);
+                    this.meshUV0s = arr;
+                }
+            }
+
+            // --- UV1 ---
+            if (other.meshUV1s != null)
+            {
+                if (this.meshUV1s == null)
+                {
+                    this.meshUV1s = (Vector2[])other.meshUV1s.Clone();
+                }
+                else
+                {
+                    Vector2[] arr = new Vector2[this.meshUV1s.Length + other.meshUV1s.Length];
+                    System.Array.Copy(this.meshUV1s, 0, arr, 0, this.meshUV1s.Length);
+                    System.Array.Copy(other.meshUV1s, 0, arr, this.meshUV1s.Length, other.meshUV1s.Length);
+                    this.meshUV1s = arr;
+                }
+            }
+
+            // --- UV2 ---
+            if (other.meshUV2s != null)
+            {
+                if (this.meshUV2s == null)
+                {
+                    this.meshUV2s = (Vector2[])other.meshUV2s.Clone();
+                }
+                else
+                {
+                    Vector2[] arr = new Vector2[this.meshUV2s.Length + other.meshUV2s.Length];
+                    System.Array.Copy(this.meshUV2s, 0, arr, 0, this.meshUV2s.Length);
+                    System.Array.Copy(other.meshUV2s, 0, arr, this.meshUV2s.Length, other.meshUV2s.Length);
+                    this.meshUV2s = arr;
+                }
+            }
+
+            // --- Colors ---
+            if (other.meshColors != null)
+            {
+                if (this.meshColors == null)
+                {
+                    this.meshColors = (Color[])other.meshColors.Clone();
+                }
+                else
+                {
+                    Color[] arr = new Color[this.meshColors.Length + other.meshColors.Length];
+                    System.Array.Copy(this.meshColors, 0, arr, 0, this.meshColors.Length);
+                    System.Array.Copy(other.meshColors, 0, arr, this.meshColors.Length, other.meshColors.Length);
+                    this.meshColors = arr;
+                }
+            }
+
+            // --- Tangents ---
+            if (other.meshTangents != null)
+            {
+                if (this.meshTangents == null)
+                {
+                    this.meshTangents = (Vector4[])other.meshTangents.Clone();
+                }
+                else
+                {
+                    Vector4[] arr = new Vector4[this.meshTangents.Length + other.meshTangents.Length];
+                    System.Array.Copy(this.meshTangents, 0, arr, 0, this.meshTangents.Length);
+                    System.Array.Copy(other.meshTangents, 0, arr, this.meshTangents.Length, other.meshTangents.Length);
+                    this.meshTangents = arr;
+                }
+            }
+
+            // --- Triangles (per-submesh, vertex offset) ---
+            if (other.triangles != null)
+            {
+                if (this.triangles == null)
+                {
+                    this.triangles = new int[other.triangles.Length][];
+                }
+                else
+                {
+                    int[][] newTris = new int[this.triangles.Length + other.triangles.Length][];
+                    System.Array.Copy(this.triangles, newTris, this.triangles.Length);
+                    this.triangles = newTris;
+                }
+
+                int baseIndex = this.triangles.Length - other.triangles.Length;
+
+                for (int s = 0; s < other.triangles.Length; s++)
+                {
+                    int[] src = other.triangles[s];
+
+                    if (src == null)
+                    {
+                        this.triangles[baseIndex + s] = null;
+                        continue;
+                    }
+
+                    int[] dst = new int[src.Length];
+
+                    for (int i = 0; i < src.Length; i++)
+                    {
+                        dst[i] = src[i] + vertexOffset;
+                    }
+
+                    this.triangles[baseIndex + s] = dst;
+                }
+            }
+
+            // --- Bounds ---
+            this.bounds.Encapsulate(other.bounds);
+        }
+
+        public static MeshData MergeMeshes(System.Collections.Generic.List<MeshData> meshes)
+        {
+            if (meshes == null || meshes.Count == 0)
+            {
+                return new MeshData();
+            }
+
+            MeshData result = new MeshData();
+
+            var vertList = new System.Collections.Generic.List<Vector3>();
+
+            var normalsList = new System.Collections.Generic.List<Vector3>();
+            var uv0List = new System.Collections.Generic.List<Vector2>();
+            var uv1List = new System.Collections.Generic.List<Vector2>();
+            var uv2List = new System.Collections.Generic.List<Vector2>();
+            var colorList = new System.Collections.Generic.List<Color>();
+            var tangentList = new System.Collections.Generic.List<Vector4>();
+
+            bool hasNormals = true;
+            bool hasUV0 = true;
+            bool hasUV1 = true;
+            bool hasUV2 = true;
+            bool hasColors = true;
+            bool hasTangents = true;
+
+            // determine max submesh count
+            int maxSubMeshCount = 0;
+            for (int m = 0; m < meshes.Count; m++)
+            {
+                MeshData md = meshes[m];
+                if (md == null) continue;
+
+                if (md.triangles != null && md.triangles.Length > maxSubMeshCount)
+                {
+                    maxSubMeshCount = md.triangles.Length;
+                }
+            }
+
+            var submeshLists = new System.Collections.Generic.List<int>[maxSubMeshCount];
+            for (int i = 0; i < maxSubMeshCount; i++)
+            {
+                submeshLists[i] = new System.Collections.Generic.List<int>();
+            }
+
+            int vertexOffset = 0;
+
+            for (int m = 0; m < meshes.Count; m++)
+            {
+                MeshData md = meshes[m];
+                if (md == null || md.vertices == null || md.vertices.Length == 0)
+                {
+                    continue;
+                }
+
+                // --- vertices ---
+                vertList.AddRange(md.vertices);
+
+                // --- optional channels presence tracking ---
+                if (md.meshNormals == null) hasNormals = false;
+                if (md.meshUV0s == null) hasUV0 = false;
+                if (md.meshUV1s == null) hasUV1 = false;
+                if (md.meshUV2s == null) hasUV2 = false;
+                if (md.meshColors == null) hasColors = false;
+                if (md.meshTangents == null) hasTangents = false;
+
+                // --- triangles ---
+                if (md.triangles != null)
+                {
+                    for (int s = 0; s < md.triangles.Length; s++)
+                    {
+                        int[] tris = md.triangles[s];
+                        if (tris == null) continue;
+
+                        var dst = submeshLists[s];
+
+                        for (int i = 0; i < tris.Length; i++)
+                        {
+                            dst.Add(tris[i] + vertexOffset);
+                        }
+                    }
+                }
+
+                // --- attributes (only append now, filter later if needed) ---
+                if (md.meshNormals != null) normalsList.AddRange(md.meshNormals);
+                if (md.meshUV0s != null) uv0List.AddRange(md.meshUV0s);
+                if (md.meshUV1s != null) uv1List.AddRange(md.meshUV1s);
+                if (md.meshUV2s != null) uv2List.AddRange(md.meshUV2s);
+                if (md.meshColors != null) colorList.AddRange(md.meshColors);
+                if (md.meshTangents != null) tangentList.AddRange(md.meshTangents);
+
+                vertexOffset += md.vertices.Length;
+            }// end loop meshes
+
+            // --- assign vertices ---
+            result.vertices = vertList.ToArray();
+
+            // --- assign triangles ---
+            result.triangles = new int[maxSubMeshCount][];
+            for (int i = 0; i < maxSubMeshCount; i++)
+            {
+                result.triangles[i] = submeshLists[i].Count > 0 ? submeshLists[i].ToArray() : null;
+            }
+
+            // --- assign attributes ONLY if all meshes had them ---
+            if (hasNormals && normalsList.Count == vertList.Count)
+                result.meshNormals = normalsList.ToArray();
+
+            if (hasUV0 && uv0List.Count == vertList.Count)
+                result.meshUV0s = uv0List.ToArray();
+
+            if (hasUV1 && uv1List.Count == vertList.Count)
+                result.meshUV1s = uv1List.ToArray();
+
+            if (hasUV2 && uv2List.Count == vertList.Count)
+                result.meshUV2s = uv2List.ToArray();
+
+            if (hasColors && colorList.Count == vertList.Count)
+                result.meshColors = colorList.ToArray();
+
+            if (hasTangents && tangentList.Count == vertList.Count)
+                result.meshTangents = tangentList.ToArray();
+
+            // --- bounds ---
+            bool first = true;
+            for (int i = 0; i < meshes.Count; i++)
+            {
+                MeshData md = meshes[i];
+                if (md == null) continue;
+
+                if (first)
+                {
+                    result.bounds = md.bounds;
+                    first = false;
+                }
+                else
+                {
+                    result.bounds.Encapsulate(md.bounds);
+                }
+            }
+
+            return result;
+        }
+
     }
 
 
