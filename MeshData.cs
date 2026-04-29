@@ -438,15 +438,21 @@ namespace EyE.Geometry
                 throw new System.ArgumentNullException("mesh");
 
             indexFormat = mesh.indexFormat;
-            System.Array.Copy(mesh.vertices, vertices, mesh.vertices.Length);
+            vertices = new Vector3[mesh.vertices.Length];
             triangles = new int[mesh.triangles.Length][];
+            meshNormals = new Vector3[mesh.meshNormals.Length];
+            meshUV0s = new Vector2[mesh.meshUV0s.Length];
+            meshUV1s = new Vector2[mesh.meshUV1s.Length];
+            meshUV2s = new Vector2[mesh.meshUV2s.Length];
+            meshColors = new Color[mesh.meshColors.Length];
+            meshTangents = new Vector4[mesh.meshTangents.Length];
 
+            System.Array.Copy(mesh.vertices, vertices, mesh.vertices.Length);
             for (int i = 0; i < mesh.triangles.Length; i++)
             {
                 triangles[i] = new int[mesh.triangles[i].Length];
                 System.Array.Copy(mesh.triangles[i], triangles[i], mesh.triangles[i].Length);
             }
-
             System.Array.Copy(mesh.meshNormals, meshNormals, mesh.meshNormals.Length);
             System.Array.Copy(mesh.meshUV0s, meshUV0s, mesh.meshUV0s.Length);
             System.Array.Copy(mesh.meshUV1s, meshUV1s, mesh.meshUV1s.Length);
